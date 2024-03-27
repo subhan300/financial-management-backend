@@ -4,6 +4,8 @@ const { ApiResponse } = require("../utils/ApiResponse.js");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { asyncHandler } = require("../utils/asyncHandler.js");
+const { sendEmail } = require("../utils/SendMail.js");
+const { generateRandomSecret } = require("../utils/generateSecret.js");
 
 const generateAccessAndRefereshTokens = async (user) => {
   try {
@@ -31,7 +33,7 @@ const registerUser = asyncHandler(async (req, res) => {
   // check for user creation
   // return res
   const { email, username, password } = req.body;
-  console.log(email, username, password);
+  const token = generateRandomSecret();
   if ([email, username, password].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "All fields are required");
   }
@@ -45,7 +47,8 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await User.create({
     email,
     password,
-    username: username.toLowerCase()
+    username: username.toLowerCase(),
+    verificationToken: token
   });
 
   const createdUser = await User.findById(user._id).select("-password -refreshToken");
@@ -53,8 +56,18 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
-
-  return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
+  let mailOptions = {
+    from: "hasnainaskari32@gmail.com",
+    to: email,
+    subject: "Email confirmation",
+    html: `Press <a href="http://localhost:3977/api/v1/users/verify?token=${token}">here</a> to verify your email. Thanks!`
+  };
+  sendEmail(mailOptions);
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(200, createdUser, "User registered Successfully. Please checkout your email to verify your email")
+    );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -343,7 +356,32 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
 });
+const verifyEmail = asyncHandler(async (req, res) => {
+  try {
+    // Extract the verification token from the request parameters
+    const { token } = req.query;
+    console.log(token, "token=========!!!!!");
+    // Find the user with the provided verification token
+    const user = await User.findOne({ verificationToken: token });
+    console.log(user, "user======");
+    if (!user) {
+      // If no user found with the token, return an error
+      throw new ApiError(404, "Invalid verification token");
+    }
 
+    // If user found, update the isVerified field to true
+    user.isVerifed = true;
+    user.verificationToken = undefined; // Clear the verification token
+    await user.save();
+
+    // Redirect or respond with a success message
+    res.status(200).json(new ApiResponse(200, createdUser, "Email verified successfully"));
+  } catch (error) {
+    // Handle any errors
+    console.error("Error verifying email:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
@@ -401,5 +439,6 @@ module.exports = {
   updateUserCoverImage,
   getUserChannelProfile,
   getWatchHistory,
-  updateAccountDetails
+  updateAccountDetails,
+  verifyEmail
 };
