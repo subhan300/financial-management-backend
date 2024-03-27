@@ -5,7 +5,8 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const { asyncHandler } = require("../utils/asyncHandler.js");
 const { sendEmail } = require("../utils/SendMail.js");
-const { generateRandomSecret } = require("../utils/generateSecret.js");
+const { generateRandomSecretKey } = require("../utils/generateSecret.js");
+const { uploadOnCloudinary } = require("../utils/fileuploader.js");
 
 const generateAccessAndRefereshTokens = async (user) => {
   try {
@@ -23,17 +24,9 @@ const generateAccessAndRefereshTokens = async (user) => {
   }
 };
 const registerUser = asyncHandler(async (req, res) => {
-  // get user details from frontend
-  // validation - not empty
-  // check if user already exists: username, email
-  // check for images, check for avatar
-  // upload them to cloudinary, avatar
-  // create user object - create entry in db
-  // remove password and refresh token field from response
-  // check for user creation
-  // return res
   const { email, username, password } = req.body;
-  const token = generateRandomSecret();
+  const token = generateRandomSecretKey();
+  const avatarLocalPath = req.file?.path;
   if ([email, username, password].some((field) => field?.trim() === "")) {
     throw new ApiError(400, "All fields are required");
   }
@@ -44,10 +37,12 @@ const registerUser = asyncHandler(async (req, res) => {
   if (existedUser) {
     throw new ApiError(409, "User with email or username already exists");
   }
+  const upload = await uploadOnCloudinary(avatarLocalPath);
   const user = await User.create({
     email,
     password,
     username: username.toLowerCase(),
+    avatar: upload?.url,
     verificationToken: token
   });
 
@@ -60,14 +55,10 @@ const registerUser = asyncHandler(async (req, res) => {
     from: "hasnainaskari32@gmail.com",
     to: email,
     subject: "Email confirmation",
-    html: `Press <a href="http://localhost:3977/api/v1/users/verify?token=${token}">here</a> to verify your email. Thanks!`
+    html: `Press <a href="http://localhost:3977/api/v1/users/verify/${token}">http://localhost:3977/api/v1/users/verify/${token}</a> to verify your email. Thanks!`
   };
   sendEmail(mailOptions);
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(200, createdUser, "User registered Successfully. Please checkout your email to verify your email")
-    );
+  return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -214,17 +205,15 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email } = req.body;
-
-  if (!fullName || !email) {
+  const { username, email } = req.body;
+  if (!username || !email) {
     throw new ApiError(400, "All fields are required");
   }
-
   const user = await User.findByIdAndUpdate(
-    req.user?._id,
+    req.params.id,
     {
       $set: {
-        fullName,
+        username: username,
         email: email
       }
     },
@@ -358,30 +347,28 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 const verifyEmail = asyncHandler(async (req, res) => {
   try {
-    // Extract the verification token from the request parameters
-    const { token } = req.query;
-    console.log(token, "token=========!!!!!");
+    const token = decodeURIComponent(req.params.token);
+    console.log(token);
     // Find the user with the provided verification token
     const user = await User.findOne({ verificationToken: token });
     console.log(user, "user======");
-    if (!user) {
-      // If no user found with the token, return an error
-      throw new ApiError(404, "Invalid verification token");
+    if (user == null) {
+      throw new ApiError(404, "Invalid token");
     }
-
     // If user found, update the isVerified field to true
-    user.isVerifed = true;
+    user.isVerified = true; // Corrected typo here
     user.verificationToken = undefined; // Clear the verification token
     await user.save();
 
     // Redirect or respond with a success message
-    res.status(200).json(new ApiResponse(200, createdUser, "Email verified successfully"));
+    res.status(200).json(new ApiResponse(200, "Email verified successfully"));
   } catch (error) {
     // Handle any errors
     console.error("Error verifying email:", error);
-    res.status(500).json({ message: "Internal server error" });
+    throw new ApiError(500, "Something went wrong");
   }
 });
+
 const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
