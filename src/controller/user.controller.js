@@ -185,18 +185,17 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
-
-  const user = await User.findById(req.user?._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
-
-  if (!isPasswordCorrect) {
-    throw new ApiError(400, "Invalid old password");
+  const { password } = req.body;
+  console.log(req.params.token, "req.params.token");
+  const user = await User.findOne({
+    verificationToken: req.params.token
+  }).select("-password");
+  if (!user) {
+    res.status(404).json({ message: "user does not exists" });
   }
-
-  user.password = newPassword;
+  user.password = password;
+  user.verificationToken = undefined; // Clear the verification token
   await user.save({ validateBeforeSave: false });
-
   return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
@@ -273,6 +272,27 @@ const verifyEmail = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong");
   }
 });
+const forgetPasswordEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const token = generateRandomSecretKey();
+  if (!email) {
+    throw new ApiError(400, "username or email is required");
+  }
+  const user = await User.findOne({ email: email }).select("-password");
+  if (!user) {
+    res.status(404).json({ message: "user does not exists" });
+  }
+  user.verificationToken = token;
+  await user.save({ validateBeforeSave: false });
+  let mailOptions = {
+    from: "hasnainaskari32@gmail.com",
+    to: email,
+    subject: "Reset Password",
+    html: `Press <a href="http://localhost:5173/resetpassword/${token}">Click here</a> to reset your password. Thanks!`
+  };
+  sendEmail(mailOptions);
+  return res.status(201).json(new ApiResponse(200, "Email has been sent"));
+});
 
 module.exports = {
   loginUser,
@@ -283,5 +303,6 @@ module.exports = {
   getCurrentUser,
   updateUserAvatar,
   updateAccountDetails,
-  verifyEmail
+  verifyEmail,
+  forgetPasswordEmail
 };
