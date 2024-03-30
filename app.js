@@ -33,6 +33,8 @@ app.use((req, res, next) => {
 });
 //routes import
 const userRouter = require("./src/routes/user.route.js");
+const incomeRouter = require("./src/routes/income.router.js");
 // Routes
 app.use("/api/v1/users", userRouter.router);
+app.use("/api/v1/income", incomeRouter.router);
 module.exports = app;
