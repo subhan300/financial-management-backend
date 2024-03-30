@@ -7,7 +7,6 @@ const {
   changeCurrentPassword,
   getCurrentUser,
   updateUserAvatar,
-  updateUserCoverImage,
   updateAccountDetails,
   verifyEmail
 } = require("../controller/user.controller.js");
@@ -18,7 +17,7 @@ const verifyJWT = require("../middleware/auth.middleware.js");
 const router = Router();
 router.post("/register", upload.single("avatar"), registerUser);
 router.route("/login").post(loginUser);
-router.route("/verify/:token").get(verifyEmail);
+router.route("/email-verify/:token").get(verifyEmail);
 //secured routes
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);

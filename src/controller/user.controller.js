@@ -1,4 +1,3 @@
-const { ApiError } = require("../utils/ApiError.js");
 const User = require("../models/user.model.js");
 const { ApiResponse } = require("../utils/ApiResponse.js");
 const jwt = require("jsonwebtoken");
@@ -7,6 +6,7 @@ const { asyncHandler } = require("../utils/asyncHandler.js");
 const { sendEmail } = require("../utils/SendMail.js");
 const { generateRandomSecretKey } = require("../utils/generateSecret.js");
 const { uploadOnCloudinary } = require("../utils/fileuploader.js");
+const { ApiError } = require("../utils/ApiError.js");
 
 const generateAccessAndRefereshTokens = async (user) => {
   try {
@@ -55,7 +55,7 @@ const registerUser = asyncHandler(async (req, res) => {
     from: "hasnainaskari32@gmail.com",
     to: email,
     subject: "Email confirmation",
-    html: `Press <a href="http://localhost:3977/api/v1/users/verify/${token}">http://localhost:3977/api/v1/users/verify/${token}</a> to verify your email. Thanks!`
+    html: `Press <a href="http://localhost:5173/verify-email/${token}">Click here</a> to verify your email. Thanks!`
   };
   sendEmail(mailOptions);
   return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
@@ -85,19 +85,19 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     $or: [{ username }, { email }]
   });
-  console.log(user, "user==============");
   if (!user) {
-    throw new ApiError(404, "User does not exist");
+    res.status(404).json({ message: "user does not exists" });
   }
-
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials");
+    res.status(404).json({ message: "Invalid credentials" });
   }
 
+  if (user.isVerified === false) {
+    res.status(404).json({ message: "Please verify your email first" });
+  }
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user);
-
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
   const options = {
@@ -250,34 +250,6 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
   return res.status(200).json(new ApiResponse(200, user, "Avatar image updated successfully"));
 });
-
-const updateUserCoverImage = asyncHandler(async (req, res) => {
-  const coverImageLocalPath = req.file?.path;
-
-  if (!coverImageLocalPath) {
-    throw new ApiError(400, "Cover image file is missing");
-  }
-
-  //TODO: delete old image - assignment
-
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
-  if (!coverImage.url) {
-    throw new ApiError(400, "Error while uploading on avatar");
-  }
-
-  const user = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        coverImage: coverImage.url
-      }
-    },
-    { new: true }
-  ).select("-password");
-
-  return res.status(200).json(new ApiResponse(200, user, "Cover image updated successfully"));
-});
 const verifyEmail = asyncHandler(async (req, res) => {
   try {
     const token = decodeURIComponent(req.params.token);
@@ -310,7 +282,6 @@ module.exports = {
   changeCurrentPassword,
   getCurrentUser,
   updateUserAvatar,
-  updateUserCoverImage,
   updateAccountDetails,
   verifyEmail
 };
