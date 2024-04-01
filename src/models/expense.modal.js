@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const incomeSchema = new Schema(
+const expenseSchema = new Schema(
   {
-    monthly_income: {
+    monthly_rent: {
       type: String,
       required: true
     },
@@ -10,15 +10,19 @@ const incomeSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "User"
     },
-    date: {
-      type: Date,
-      required: true
-    },
-    total_income: {
+    monthly_debts: {
       type: String,
       required: true
     },
-    extra_income: [
+    debts_period: {
+      type: String,
+      required: true
+    },
+    total_expense: {
+      type: String,
+      required: true
+    },
+    other_expense: [
       {
         expense_name: {
           type: String,
@@ -35,4 +39,4 @@ const incomeSchema = new Schema(
     timestamps: true
   }
 );
-module.exports = mongoose.model("Income", incomeSchema);
+module.exports = mongoose.model("Expense", expenseSchema);
