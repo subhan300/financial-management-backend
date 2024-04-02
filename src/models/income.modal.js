@@ -20,7 +20,7 @@ const incomeSchema = new Schema(
     },
     extra_income: [
       {
-        expense_name: {
+        income_name: {
           type: String,
           required: true
         },

@@ -19,8 +19,8 @@ const getIncome = async (req, res) => {
 const addIncome = async (req, res) => {
   const { monthly_income, date, extra_income, total_income, UserId } = req.body;
   try {
-    if ([monthly_income, date].some((field) => field?.trim() === "")) {
-      throw new ApiError(400, "fields are required");
+    if (monthly_income === "" || date === "") {
+      return res.status(400).json({ message: "Field is required" });
     }
     const income = await Income.create({
       monthly_income,

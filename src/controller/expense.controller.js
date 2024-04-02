@@ -18,8 +18,9 @@ const getExpense = async (req, res) => {
 };
 const addExpense = async (req, res) => {
   const { monthly_rent, monthly_debts, debts_period, other_expense, total_expense, UserId } = req.body;
+  console.log(monthly_rent, monthly_debts, debts_period, "monthly_rent, monthly_debts, debts_period");
   try {
-    if ([monthly_rent, monthly_debts, debts_period].some((field) => field?.trim() === "")) {
+    if (monthly_rent === "" || monthly_rent === "" || debts_period === "") {
       throw new ApiError(400, "fields are required");
     }
     const expense = await Expense.create({
@@ -30,7 +31,7 @@ const addExpense = async (req, res) => {
       total_expense,
       UserId
     });
-    return res.status(201).json(new ApiResponse(200, expense, "Income has been created"));
+    return res.status(201).json(new ApiResponse(200, expense, "Expense has been created"));
   } catch (error) {
     console.log(error);
     throw new ApiError(500, "Something went wrong while generating refresh and access tokens");
