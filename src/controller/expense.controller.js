@@ -5,7 +5,7 @@ const { ApiResponse } = require("../utils/ApiResponse");
 const getExpense = async (req, res) => {
   const UserId = req.params.UserId; // Assuming userId is passed as a string
   try {
-    const expense = await Expense.findOne({ UserId });
+    const expense = await Expense.find({ UserId });
     if (!expense) {
       return res.status(404).json({ message: "User does not exists" });
     }
@@ -17,7 +17,7 @@ const getExpense = async (req, res) => {
   }
 };
 const addExpense = async (req, res) => {
-  const { monthly_rent, monthly_debts, debts_period, other_expense, total_expense, UserId } = req.body;
+  const { monthly_rent, monthly_debts, debts_period, other_expense, total_expense, UserId, fixed_expense } = req.body;
   console.log(monthly_rent, monthly_debts, debts_period, "monthly_rent, monthly_debts, debts_period");
   try {
     if (monthly_rent === "" || monthly_rent === "" || debts_period === "") {
@@ -29,6 +29,7 @@ const addExpense = async (req, res) => {
       debts_period,
       other_expense,
       total_expense,
+      fixed_expense,
       UserId
     });
     return res.status(201).json(new ApiResponse(200, expense, "Expense has been created"));

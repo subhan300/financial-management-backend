@@ -5,7 +5,7 @@ const { ApiResponse } = require("../utils/ApiResponse");
 const getIncome = async (req, res) => {
   const UserId = req.params.UserId;
   try {
-    const income = await Income.findOne({ UserId });
+    const income = await Income.find({ UserId });
     if (!income) {
       return res.status(404).json({ message: "User does not exists" });
     }

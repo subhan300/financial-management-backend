@@ -21,6 +21,10 @@ const goalSchema = new Schema(
     timeto_take: {
       type: String,
       required: true
+    },
+    monthly_saving: {
+      type: String,
+      required: true
     }
   },
   {

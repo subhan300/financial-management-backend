@@ -22,6 +22,10 @@ const expenseSchema = new Schema(
       type: String,
       required: true
     },
+    fixed_expense: {
+      type: String,
+      required: true
+    },
     other_expense: [
       {
         expense_name: {
