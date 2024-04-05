@@ -27,7 +27,7 @@ const addIncome = async (req, res) => {
       date,
       extra_income,
       total_income,
-      UserId
+      UserId: String(UserId)
     });
     return res.status(201).json(new ApiResponse(200, income, "Income has been created"));
   } catch (error) {
