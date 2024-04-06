@@ -6,9 +6,10 @@ const getIncome = async (req, res) => {
   const UserId = req.params.UserId;
   try {
     const income = await Income.find({ UserId });
-    if (!income) {
+    if (income.length === 0) {
       return res.status(404).json({ message: "User does not exists" });
     }
+    console.log(UserId, income, "income=====");
     return res.status(200).json(new ApiResponse(200, income, "Your income"));
   } catch (error) {
     console.log(error);
@@ -35,7 +36,56 @@ const addIncome = async (req, res) => {
     throw new ApiError(500, "Something went wrong while generating refresh and access tokens");
   }
 };
+const editIncome = async (req, res) => {
+  const UserId = req.params.UserId;
+  const { monthly_rent, monthly_debts, debts_period, other_expense, total_expense } = req.body;
+  try {
+    if (!monthly_rent || !monthly_debts || !debts_period) {
+      throw new ApiError(400, "Fields are required");
+    }
+    // Find the expense document by UserId and update it
+    const expense = await Income.findOneAndUpdate(
+      { UserId: UserId }, // Filter condition
+      { monthly_rent, monthly_debts, debts_period, other_expense, total_expense }, // Update fields
+      { new: true } // Return the updated document
+    );
+    if (!expense) {
+      throw new ApiError(404, "Expense not found");
+    }
+    return res.status(200).json(new ApiResponse(200, expense, "Expense has been updated"));
+  } catch (error) {
+    console.error(error);
+    if (error instanceof ApiError) {
+      return res.status(error.statusCode).json(new ApiResponse(error.statusCode, null, error.message));
+    } else {
+      return res.status(500).json(new ApiResponse(500, null, "Something went wrong while updating the expense"));
+    }
+  }
+};
+const deleteIncome = async (req, res) => {
+  try {
+    const { id } = req.params; // Get the product ID from the request parameters
+    const result = await Income.findByIdAndDelete(id);
+    if (!result) {
+      return res.status(404).send({
+        message: "Id not found!"
+      });
+    }
+    res.status(200).send({
+      message: "Income has been deleted!",
+      result: []
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: "Something went wrong!",
+      error
+    });
+  }
+};
 module.exports = {
   addIncome,
-  getIncome
+  getIncome,
+  editIncome,
+  deleteIncome
 };
