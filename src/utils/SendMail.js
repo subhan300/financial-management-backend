@@ -4,8 +4,7 @@ require("dotenv").config();
 let transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true,
-  secure: true,
+  secure: false,
   auth: {
     user: process.env.NODEMAIL_EMAIL,
     pass: process.env.NODEMAIL_PASSWORD
@@ -17,7 +16,7 @@ let transporter = nodemailer.createTransport({
 const sendEmail = (mailOptions) => {
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.log(error);
+      console.log("error",error,"info",info);
       return error;
     } else {
       console.log("Email sent: " + info.response);
