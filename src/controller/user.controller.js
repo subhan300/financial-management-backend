@@ -7,6 +7,9 @@ const { sendEmail } = require("../utils/SendMail.js");
 const { generateRandomSecretKey } = require("../utils/generateSecret.js");
 const { uploadOnCloudinary } = require("../utils/fileuploader.js");
 const { ApiError } = require("../utils/ApiError.js");
+const { generateRandomSecretKey } = require("../utils/generateSecret.js");
+const { uploadOnCloudinary } = require("../utils/fileuploader.js");
+const { ApiError } = require("../utils/ApiError.js");
 
 const generateAccessAndRefereshTokens = async (user) => {
   try {
@@ -57,8 +60,10 @@ const registerUser = asyncHandler(async (req, res) => {
     to: email,
     subject: "Email confirmation",
     html: `Press <a href="http://localhost:5173/verify-email/${token}">Click here</a> to verify your email. Thanks!`
+    html: `Press <a href="http://localhost:5173/verify-email/${token}">Click here</a> to verify your email. Thanks!`
   };
   sendEmail(mailOptions);
+  return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
   return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
 });
 
@@ -78,13 +83,18 @@ const loginUser = asyncHandler(async (req, res) => {
   });
   if (!user) {
     res.status(404).json({ message: "user does not exists" });
+    res.status(404).json({ message: "user does not exists" });
   }
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
     res.status(404).json({ message: "Invalid credentials" });
+    res.status(404).json({ message: "Invalid credentials" });
   }
 
+  if (user.isVerified === false) {
+    res.status(404).json({ message: "Please verify your email first" });
+  }
   if (user.isVerified === false) {
     res.status(404).json({ message: "Please verify your email first" });
   }
@@ -183,7 +193,16 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   }).select("-password");
   if (!user) {
     res.status(404).json({ message: "user does not exists" });
+  const { password } = req.body;
+  console.log(req.params.token, "req.params.token");
+  const user = await User.findOne({
+    verificationToken: req.params.token
+  }).select("-password");
+  if (!user) {
+    res.status(404).json({ message: "user does not exists" });
   }
+  user.password = password;
+  user.verificationToken = undefined; // Clear the verification token
   user.password = password;
   user.verificationToken = undefined; // Clear the verification token
   await user.save({ validateBeforeSave: false });
@@ -197,12 +216,16 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { username, email } = req.body;
   if (!username || !email) {
+  const { username, email } = req.body;
+  if (!username || !email) {
     throw new ApiError(400, "All fields are required");
   }
   const user = await User.findByIdAndUpdate(
     req.params.id,
+    req.params.id,
     {
       $set: {
+        username: username,
         username: username,
         email: email
       }
@@ -244,25 +267,52 @@ const verifyEmail = asyncHandler(async (req, res) => {
   try {
     const token = decodeURIComponent(req.params.token);
     console.log(token);
+    const token = decodeURIComponent(req.params.token);
+    console.log(token);
     // Find the user with the provided verification token
     const user = await User.findOne({ verificationToken: token });
     console.log(user, "user======");
     if (user == null) {
       throw new ApiError(404, "Invalid token");
+    if (user == null) {
+      throw new ApiError(404, "Invalid token");
     }
     // If user found, update the isVerified field to true
+    user.isVerified = true; // Corrected typo here
     user.isVerified = true; // Corrected typo here
     user.verificationToken = undefined; // Clear the verification token
     await user.save();
 
     // Redirect or respond with a success message
     res.status(200).json(new ApiResponse(200, "Email verified successfully"));
+    res.status(200).json(new ApiResponse(200, "Email verified successfully"));
   } catch (error) {
     // Handle any errors
     console.error("Error verifying email:", error);
     throw new ApiError(500, "Something went wrong");
+    throw new ApiError(500, "Something went wrong");
   }
 });
+const forgetPasswordEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const token = generateRandomSecretKey();
+  if (!email) {
+    throw new ApiError(400, "username or email is required");
+  }
+  const user = await User.findOne({ email: email }).select("-password");
+  if (!user) {
+    res.status(404).json({ message: "user does not exists" });
+  }
+  user.verificationToken = token;
+  await user.save({ validateBeforeSave: false });
+  let mailOptions = {
+    from: "hasnainaskari32@gmail.com",
+    to: email,
+    subject: "Reset Password",
+    html: `Press <a href="http://localhost:5173/resetpassword/${token}">Click here</a> to reset your password. Thanks!`
+  };
+  sendEmail(mailOptions);
+  return res.status(201).json(new ApiResponse(200, "Email has been sent"));
 const forgetPasswordEmail = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const token = generateRandomSecretKey();
@@ -294,6 +344,8 @@ module.exports = {
   getCurrentUser,
   updateUserAvatar,
   updateAccountDetails,
+  verifyEmail,
+  forgetPasswordEmail
   verifyEmail,
   forgetPasswordEmail
 };

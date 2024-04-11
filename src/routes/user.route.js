@@ -11,9 +11,15 @@ const {
   verifyEmail,
   forgetPasswordEmail
 } = require("../controller/user.controller.js");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 const verifyJWT = require("../middleware/auth.middleware.js");
 const router = Router();
+<<<<<<< HEAD
 router.post("/register", registerUser);
+=======
+router.post("/register", upload.single("avatar"), registerUser);
+>>>>>>> c204e05ecf63f3def47fca1adba2eb250bad76c9
 router.route("/login").post(loginUser);
 router.route("/email-verify/:token").get(verifyEmail);
 router.route("/forget-password").post(forgetPasswordEmail);
