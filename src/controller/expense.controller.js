@@ -5,7 +5,7 @@ const { ApiResponse } = require("../utils/ApiResponse");
 const getExpense = async (req, res) => {
   const UserId = req.params.UserId; // Assuming userId is passed as a string
   try {
-    const expenses = await Expense.find({ UserId });
+    const expenses = await Expense.find({ UserId: String(UserId) });
 
     if (expenses.length === 0) {
       // If no records found, return an empty array

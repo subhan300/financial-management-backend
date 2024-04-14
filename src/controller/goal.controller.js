@@ -63,8 +63,31 @@ const editGoal = async (req, res) => {
     }
   }
 };
+const deleteGoal = async (req, res) => {
+  console.log(req.params, "req.params");
+  try {
+    const { id } = req.params; // Get the product ID from the request parameters
+    const result = await Goal.findByIdAndDelete(id);
+    if (!result) {
+      return res.status(404).send({
+        message: "Id not found!"
+      });
+    }
+    res.status(200).send({
+      message: "Income has been deleted!",
+      result: []
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      message: "Something went wrong!",
+      error
+    });
+  }
+};
 module.exports = {
   addGoal,
   getMonthlyGoal,
-  editGoal
+  editGoal,
+  deleteGoal
 };
