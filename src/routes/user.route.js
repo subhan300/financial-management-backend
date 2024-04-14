@@ -9,7 +9,8 @@ const {
   updateUserAvatar,
   updateAccountDetails,
   verifyEmail,
-  forgetPasswordEmail
+  forgetPasswordEmail,
+  sendMail
 } = require("../controller/user.controller.js");
 const verifyJWT = require("../middleware/auth.middleware.js");
 const router = Router();
@@ -23,6 +24,7 @@ router.route("/refresh-token").post(refreshAccessToken);
 router.route("/change-password/:token").post(changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 router.route("/update-account/:id").patch(updateAccountDetails);
+router.route("/send-email").post(sendMail);
 module.exports = {
   router
 };

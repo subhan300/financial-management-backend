@@ -7,6 +7,7 @@ const { sendEmail } = require("../utils/SendMail.js");
 const { generateRandomSecretKey } = require("../utils/generateSecret.js");
 const { uploadOnCloudinary } = require("../utils/fileuploader.js");
 const { ApiError } = require("../utils/ApiError.js");
+const { default: axios } = require("axios");
 
 const generateAccessAndRefereshTokens = async (user) => {
   try {
@@ -52,7 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
   let mailOptions = {
-    from: "hasnainaskari32@gmail.com",
+    from: "iamierlusmazilu@gmail.com",
     to: email,
     subject: "Email confirmation",
     html: `Press <a href="http://localhost:5173/verify-email/${token}">Click here</a> to verify your email. Thanks!`
@@ -283,6 +284,38 @@ const forgetPasswordEmail = asyncHandler(async (req, res) => {
   sendEmail(mailOptions);
   return res.status(201).json(new ApiResponse(200, "Email has been sent"));
 });
+const sendMail = asyncHandler(async (req, res) => {
+  try {
+    // Extract email data from the request body
+    const { to, from, subject, text } = req.body;
+
+    // SendGrid API key
+    const SENDGRID_API_KEY = "YOUR_SENDGRID_API_KEY";
+
+    // SendGrid email payload
+    const emailData = {
+      personalizations: [{ to: [{ email: to }], subject }],
+      from: { email: from },
+      content: [{ type: "text/plain", value: text }]
+    };
+
+    // Send email using SendGrid API
+    const response = await axios.post("https://api.sendgrid.com/v3/mail/send", emailData, {
+      headers: {
+        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    // Email sent successfully
+    console.log("Email sent:", response.data);
+    res.status(200).send("Email sent successfully");
+  } catch (error) {
+    // Error sending email
+    console.error("Error sending email:", error.response.data);
+    res.status(500).send("Error sending email");
+  }
+});
 
 module.exports = {
   loginUser,
@@ -294,5 +327,6 @@ module.exports = {
   updateUserAvatar,
   updateAccountDetails,
   verifyEmail,
-  forgetPasswordEmail
+  forgetPasswordEmail,
+  sendMail
 };

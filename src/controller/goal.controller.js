@@ -6,7 +6,7 @@ const { json } = require("body-parser");
 const getMonthlyGoal = async (req, res) => {
   const UserId = req.params.UserId;
   try {
-    const goal = await Goal.find({ UserId });
+    const goal = await Goal.find({ UserId: String(UserId) });
     return res.status(200).json(new ApiResponse(200, goal, "monthly goal"));
   } catch (error) {
     console.log(error);
