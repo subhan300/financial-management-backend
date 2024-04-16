@@ -3,9 +3,9 @@ const mongoose = require("mongoose");
 const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
 const getExpense = async (req, res) => {
-  const UserId = req.params.UserId; // Assuming userId is passed as a string
+  const UserId = new mongoose.Types.ObjectId(req.params.UserId);
   try {
-    const expenses = await Expense.find({ UserId: String(UserId) });
+    const expenses = await Expense.find({ UserId });
 
     if (expenses.length === 0) {
       // If no records found, return an empty array
@@ -22,7 +22,7 @@ const getExpense = async (req, res) => {
 
 const addExpense = async (req, res) => {
   const { monthly_rent, monthly_debts, debts_period, other_expense, UserId, total_expense } = req.body;
-  console.log(monthly_rent, monthly_debts, debts_period, "monthly_rent, monthly_debts, debts_period");
+  const userId = new mongoose.Types.ObjectId(UserId);
   try {
     if (monthly_rent === "" || monthly_rent === "" || debts_period === "") {
       throw new ApiError(400, "fields are required");
@@ -33,7 +33,7 @@ const addExpense = async (req, res) => {
       debts_period,
       other_expense,
       total_expense,
-      UserId: String(UserId)
+      UserId: userId
     });
     return res.status(201).json(new ApiResponse(200, expense, "Expense has been created"));
   } catch (error) {
@@ -42,7 +42,7 @@ const addExpense = async (req, res) => {
   }
 };
 const editExpense = async (req, res) => {
-  const UserId = req.params.UserId;
+  const UserId = new mongoose.Types.ObjectId(req.params.UserId);
   const { monthly_rent, monthly_debts, debts_period, other_expense, total_expense } = req.body;
   try {
     if (!monthly_rent || !monthly_debts || !debts_period) {
@@ -50,7 +50,7 @@ const editExpense = async (req, res) => {
     }
     // Find the expense document by UserId and update it
     const expense = await Expense.findOneAndUpdate(
-      { UserId: String(UserId) }, // Filter condition
+      { UserId: UserId }, // Filter condition
       { monthly_rent, monthly_debts, debts_period, other_expense, total_expense }, // Update fields
       { new: true } // Return the updated document
     );

@@ -15,6 +15,7 @@ const getMonthlyGoal = async (req, res) => {
 };
 const addGoal = async (req, res) => {
   const { name, price, percentage, timeto_take, UserId, monthly_saving } = req.body;
+  const userId = new mongoose.Types.ObjectId(UserId);
   try {
     if (name === "" || price === "" || percentage === "" || UserId === "" || monthly_saving === "") {
       return res.status(400).json(
@@ -28,7 +29,7 @@ const addGoal = async (req, res) => {
       price,
       percentage,
       timeto_take,
-      UserId: String(UserId),
+      UserId: userId,
       monthly_saving
     });
     return res.status(201).json(new ApiResponse(200, goal, "Goal has been saved"));
@@ -38,7 +39,7 @@ const addGoal = async (req, res) => {
   }
 };
 const editGoal = async (req, res) => {
-  const UserId = req.params.UserId;
+  const UserId = new mongoose.Types.ObjectId(req.params.UserId);
   const { name, price, percentage, monthly_saving } = req.body;
   try {
     if (name === "" || price === "" || percentage === "" || monthly_saving === "") {
@@ -46,7 +47,7 @@ const editGoal = async (req, res) => {
     }
     // Find the expense document by UserId and update it
     const goal = await Goal.findOneAndUpdate(
-      { UserId: String(UserId) }, // Filter condition
+      { UserId: UserId }, // Filter condition
       { name, price, percentage, monthly_saving }, // Update fields
       { new: true } // Return the updated document
     );

@@ -15,7 +15,7 @@ const goalSchema = new Schema(
       ref: "User"
     },
     percentage: {
-      type: Date,
+      type: String,
       required: true
     },
     timeto_take: {

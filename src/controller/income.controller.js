@@ -4,9 +4,9 @@ const mongoose = require("mongoose");
 const { ApiResponse } = require("../utils/ApiResponse");
 
 const getIncome = async (req, res) => {
-  const UserId = req.params.UserId;
+  const UserId = new mongoose.Types.ObjectId(req.params.UserId);
   try {
-    const income = await Income.find({ UserId: String(UserId) });
+    const income = await Income.find({ UserId });
     if (income.length === 0) {
       // If no records found, return an empty array
       return res.status(200).json(new ApiResponse(200, [], "No expenses found"));
@@ -20,6 +20,8 @@ const getIncome = async (req, res) => {
 
 const addIncome = async (req, res) => {
   const { monthly_income, date, extra_income, total_income, UserId } = req.body;
+  // Convert UserId string to ObjectId
+  const userId = new mongoose.Types.ObjectId(UserId);
   try {
     if (monthly_income === "" || date === "") {
       return res.status(400).json({ message: "Field is required" });
@@ -29,7 +31,7 @@ const addIncome = async (req, res) => {
       date,
       extra_income,
       total_income,
-      UserId: String(UserId)
+      UserId: userId
     });
     return res.status(201).json(new ApiResponse(200, income, "Income has been created"));
   } catch (error) {
@@ -38,7 +40,7 @@ const addIncome = async (req, res) => {
   }
 };
 const editIncome = async (req, res) => {
-  const UserId = req.params.UserId;
+  const UserId = new mongoose.Types.ObjectId(req.params.UserId);
   const { monthly_income, date, extra_income, total_income } = req.body;
   console.log(req.body, "req.body");
   try {
