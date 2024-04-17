@@ -63,19 +63,17 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, username, password } = req.body;
+  const { email, password } = req.body;
   console.log(email);
-  if (!username && !email) {
-    throw new ApiError(400, "username or email is required");
+  if (!email) {
+    throw new ApiError(400, "email is required");
   }
   // Here is an alternative of above code based on logic discussed in video:
   // if (!(username || email)) {
   //     throw new ApiError(400, "username or email is required")
 
   // }
-  const user = await User.findOne({
-    $or: [{ username }, { email }]
-  });
+  const user = await User.findOne({ email });
   if (!user) {
     res.status(404).json({ message: "user does not exists" });
   }
@@ -247,16 +245,17 @@ const verifyEmail = asyncHandler(async (req, res) => {
     // Find the user with the provided verification token
     const user = await User.findOne({ verificationToken: token });
     console.log(user, "user======");
-    if (user == null) {
+    if (user === null) {
       throw new ApiError(404, "Invalid token");
     }
-    // If user found, update the isVerified field to true
-    user.isVerified = true; // Corrected typo here
-    user.verificationToken = undefined; // Clear the verification token
-    await user.save();
-
-    // Redirect or respond with a success message
-    res.status(200).json(new ApiResponse(200, "Email verified successfully"));
+    if (user) {
+      // If user found, update the isVerified field to true
+      user.isVerified = true; // Corrected typo here
+      user.verificationToken = undefined; // Clear the verification token
+      await user.save();
+      // Redirect or respond with a success message
+      res.status(200).json(new ApiResponse(200, "Email verified successfully"));
+    }
   } catch (error) {
     // Handle any errors
     console.error("Error verifying email:", error);
