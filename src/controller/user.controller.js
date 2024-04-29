@@ -59,7 +59,7 @@ const registerUser = asyncHandler(async (req, res) => {
     html: `Press <a href="http://localhost:5173/verify-email/${token}">Click here</a> to verify your email. Thanks!`
   };
   sendEmail(mailOptions);
-  return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
+  res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -68,24 +68,21 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!email) {
     throw new ApiError(400, "email is required");
   }
-  // Here is an alternative of above code based on logic discussed in video:
-  // if (!(username || email)) {
-  //     throw new ApiError(400, "username or email is required")
 
-  // }
   const user = await User.findOne({ email });
   if (!user) {
-    res.status(404).json({ message: "user does not exists" });
+    return res.status(404).json({ message: "User does not exist" }); // return added here
   }
-  const isPasswordValid = await user.isPasswordCorrect(password);
 
+  const isPasswordValid = await user.isPasswordCorrect(password);
   if (!isPasswordValid) {
-    res.status(404).json({ message: "Invalid credentials" });
+    return res.status(401).json({ message: "Invalid credentials" }); // return added here
   }
 
   if (user.isVerified === false) {
-    res.status(404).json({ message: "Please verify your email first" });
+    return res.status(403).json({ message: "Please verify your email first" }); // return added here
   }
+
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user);
   const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
@@ -94,7 +91,7 @@ const loginUser = asyncHandler(async (req, res) => {
     secure: true
   };
 
-  return res
+ return  res
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)

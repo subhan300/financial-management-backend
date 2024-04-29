@@ -5,6 +5,8 @@ const router = Router();
 router.post("/add-expense", verifyJWT, addExpense);
 router.get("/get-expense/:UserId", verifyJWT, getExpense);
 router.patch("/edit-expense/:UserId", verifyJWT, editExpense);
+// router.get("/get-expense/:UserId", getExpense);
+// router.patch("/edit-expense/:UserId", editExpense);
 router.delete("/delete-expense/:id", verifyJWT, deleteExpense);
 module.exports = {
   router

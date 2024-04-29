@@ -1,10 +1,19 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+
 const goalSchema = new Schema(
   {
     name: {
       type: String,
       required: true
+    },
+    status: {
+      type: String,
+      required: true
+    },
+    haveNotified:{
+      type:Boolean,
+      required:false
     },
     price: {
       type: String,
@@ -25,10 +34,18 @@ const goalSchema = new Schema(
     monthly_saving: {
       type: String,
       required: true
-    }
+    },
+    goalTracking: [
+      {
+        totalIncome: { type: Number, required: true },
+        totalExpense: { type: Number, required: true },
+        date: { type: Date }
+      }
+    ]
   },
   {
     timestamps: true
   }
 );
+
 module.exports = mongoose.model("Goal", goalSchema);

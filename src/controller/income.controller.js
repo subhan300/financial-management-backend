@@ -1,11 +1,14 @@
 const Income = require("../models/income.modal");
+const Expense = require("../models/expense.modal");
 const { ApiError } = require("../utils/ApiError");
 const mongoose = require("mongoose");
 const { ApiResponse } = require("../utils/ApiResponse");
 const { Types } = require("mongoose");
+const { updateGoal } = require("../utils");
+const goalModal = require("../models/goal.modal");
 
 function createObjectIdFromString(hexString) {
-  return Types.ObjectId.createFromHexString(hexString);
+  return Types.ObjectId.createFromHexString(`${hexString}`);
 }
 const getIncome = async (req, res) => {
   const UserId = createObjectIdFromString(req.params.UserId);
@@ -25,9 +28,12 @@ const getIncome = async (req, res) => {
 
 const addIncome = async (req, res) => {
   const { monthly_income, date, extra_income, total_income, UserId } = req.body;
-  // Convert UserId string to ObjectId
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  console.log("user id=",UserId,"length===",UserId.length)
   const userId = createObjectIdFromString(UserId);
   try {
+   
     if (monthly_income === "" || date === "") {
       return res.status(400).json({ message: "Field is required" });
     }
@@ -37,28 +43,53 @@ const addIncome = async (req, res) => {
       extra_income,
       total_income,
       UserId: userId
-    });
+    },
+    // {session}
+  );
+    const expense = await Expense.create({
+      monthly_rent:"",
+      monthly_debts:"",
+      debts_period:"",
+      other_expense:[],
+      monthly_debts:"",
+      debts_period:"",
+      total_expense:0,
+      UserId: userId,
+      date,
+      isExpenseUsable:true
+
+    }
+  // ]
+    // ,{session}
+  );
+    console.log("date==",date)
+    await session.commitTransaction();
+    session.endSession(); // Release the session
+    console.log("expesne===",expense)
     return res.status(201).json(new ApiResponse(200, income, "Income has been created"));
   } catch (error) {
     console.log(error);
+    await session.abortTransaction();
+    session.endSession(); // Release the session
     throw new ApiError(500, "Something went wrong while generating refresh and access tokens");
   }
 };
 const editIncome = async (req, res) => {
   const UserId = createObjectIdFromString(req.params.UserId);
-  const { monthly_income, date, extra_income, total_income } = req.body;
+  const { monthly_income, date, extra_income, total_income,incomeId} = req.body;
   console.log(req.body, "req.body");
   try {
-    if (!monthly_income || !date || !extra_income || !total_income) {
+    if (!monthly_income || !date || !extra_income || !total_income || !incomeId) {
       throw new ApiError(400, "Fields are required");
     }
     // Find the expense document by UserId and update it
     const expense = await Income.findOneAndUpdate(
-      { UserId: UserId }, // Filter condition
+      { UserId: UserId,_id:incomeId }, // Filter condition
       { monthly_income, date, extra_income, total_income }, // Update fields
       { new: true } // Return the updated document
     );
-    console.log(expense, "expense======");
+    const payload = { date, newTotalIncomeValue: total_income, newTotalExpenseValue: "" ,UserId};
+    await updateGoal(goalModal, payload);
     if (!expense) {
       throw new ApiError(404, "Expense not found");
     }

@@ -3,10 +3,11 @@ const { ApiError } = require("../utils/ApiError");
 const mongoose = require("mongoose");
 const { ApiResponse } = require("../utils/ApiResponse");
 const { json } = require("body-parser");
+const { createObjectIdFromString } = require("../utils");
 const getMonthlyGoal = async (req, res) => {
-  const UserId = req.params.UserId;
+  const UserId =createObjectIdFromString(req.params.UserId)
   try {
-    const goal = await Goal.find({ UserId: String(UserId) });
+    const goal = await Goal.find({ UserId: UserId });
     return res.status(200).json(new ApiResponse(200, goal, "monthly goal"));
   } catch (error) {
     console.log(error);
@@ -14,23 +15,27 @@ const getMonthlyGoal = async (req, res) => {
   }
 };
 const addGoal = async (req, res) => {
-  const { name, price, percentage, timeto_take, UserId, monthly_saving } = req.body;
-  const userId = new mongoose.Types.ObjectId(UserId);
+  const { name, price, percentage, timeto_take, UserId, monthly_saving ,goalTracking,status} = req.body;
+  const userId =createObjectIdFromString(UserId)
+  console.log("userid",userId)
   try {
-    if (name === "" || price === "" || percentage === "" || UserId === "" || monthly_saving === "") {
+    if (name === "" || price === "" || percentage === "" || UserId === "" || monthly_saving === "" || !goalTracking.length) {
       return res.status(400).json(
         json({
           message: "fields are required"
         })
       );
     }
+    console.log("gsol tra",goalTracking)
     const goal = await Goal.create({
       name,
       price,
       percentage,
       timeto_take,
       UserId: userId,
-      monthly_saving
+      monthly_saving,
+      goalTracking,
+      status
     });
     return res.status(201).json(new ApiResponse(200, goal, "Goal has been saved"));
   } catch (error) {
@@ -39,8 +44,8 @@ const addGoal = async (req, res) => {
   }
 };
 const editGoal = async (req, res) => {
-  const UserId = new mongoose.Types.ObjectId(req.params.UserId);
-  const { name, price, percentage, monthly_saving } = req.body;
+  const UserId = createObjectIdFromString(req.params.UserId);
+  const { name, price, percentage, monthly_saving ,haveNotified} = req.body;
   try {
     if (name === "" || price === "" || percentage === "" || monthly_saving === "") {
       throw new ApiError(400, "fields are required");
@@ -48,7 +53,7 @@ const editGoal = async (req, res) => {
     // Find the expense document by UserId and update it
     const goal = await Goal.findOneAndUpdate(
       { UserId: UserId }, // Filter condition
-      { name, price, percentage, monthly_saving }, // Update fields
+      { name, price, percentage, monthly_saving,haveNotified }, // Update fields
       { new: true } // Return the updated document
     );
     if (!goal) {

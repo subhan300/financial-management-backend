@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const URL = "mongodb+srv://hasnainaskari32:x43epzOYSZBa5Wvq@cluster0.nbvkq2z.mongodb.net/";
-// const URL = "mongodb://0.0.0.0:27017/financeapp_db";
+// const URL = "mongodb+srv://hasnainaskari32:x43epzOYSZBa5Wvq@cluster0.nbvkq2z.mongodb.net/";
+const URL = "mongodb://0.0.0.0:27017/financeapp_db";
 dotenv.config();
 const connectDB = async () => {
   try {

@@ -4,6 +4,14 @@ const expenseSchema = new Schema(
   {
     monthly_rent: {
       type: String,
+      required: false
+    },
+    isExpenseUsable: {
+      type: Boolean,
+      required: false
+    },
+    date: {
+      type: Date,
       required: true
     },
     UserId: {
@@ -12,15 +20,15 @@ const expenseSchema = new Schema(
     },
     monthly_debts: {
       type: String,
-      required: true
+      required: false
     },
     debts_period: {
       type: String,
-      required: true
+      required: false
     },
     total_expense: {
       type: String,
-      required: true
+      required: false
     },
     other_expense: [
       {
