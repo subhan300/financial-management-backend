@@ -56,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
     from: "iamierlusmazilu@gmail.com",
     to: email,
     subject: "Email confirmation",
-    html: `Press <a href="http://localhost:5173/verify-email/${token}">Click here</a> to verify your email. Thanks!`
+    html: `Press <a href="https://financial-frotnend.vercel.app/verify-email/${token}">Click here</a> to verify your email. Thanks!`
   };
   sendEmail(mailOptions);
   res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
