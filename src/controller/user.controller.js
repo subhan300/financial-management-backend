@@ -275,7 +275,7 @@ const forgetPasswordEmail = asyncHandler(async (req, res) => {
     from: "hasnainaskari32@gmail.com",
     to: email,
     subject: "Reset Password",
-    html: `Press <a href="http://localhost:5173/resetpassword/${token}">Click here</a> to reset your password. Thanks!`
+    html: `Press <a href="https://financial-frotnend.vercel.app/resetpassword/${token}">Click here</a> to reset your password. Thanks!`
   };
   sendEmail(mailOptions);
   return res.status(201).json(new ApiResponse(200, "Email has been sent"));
@@ -286,7 +286,7 @@ const sendMail = asyncHandler(async (req, res) => {
     const { to, from, subject, text } = req.body;
 
     // SendGrid API key
-    const SENDGRID_API_KEY = "YOUR_SENDGRID_API_KEY";
+    const SENDGRID_API_KEY =process.env.SENDGRID_API_KEY;
 
     // SendGrid email payload
     const emailData = {
