@@ -39,7 +39,7 @@ const goalSchema = new Schema(
       {
         totalIncome: { type: Number, required: true },
         totalExpense: { type: Number, required: true },
-        date: { type: Date }
+        date: { type: String }
       }
     ]
   },
