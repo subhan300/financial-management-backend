@@ -140,13 +140,34 @@ const editExpense = async (req, res) => {
 //     }
 //   }
 // };
+// const deleteExpense = async (req, res) => {
+//   try {
+//     const { id } = req.params; // Get the product ID from the request parameters
+//     const result = await Expense.findByIdAndDelete(date);
+//     if (!result) {
+//       return res.status(404).send({
+//         message: "Id not found!"
+//       });
+//     }
+//     res.status(200).send({
+//       message: "Expense has been deleted!"
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       message: "Something went wrong!",
+//       error
+//     });
+//   }
+// };
 const deleteExpense = async (req, res) => {
   try {
-    const { id } = req.params; // Get the product ID from the request parameters
-    const result = await Expense.findByIdAndDelete(id);
+    const { date } = req.params; // Get the expense date from the request parameters
+    console.log("date==",date)
+    const result = await Expense.findOneAndDelete({ date}); // Find and delete the expense with the given date and user ID
     if (!result) {
       return res.status(404).send({
-        message: "Id not found!"
+        message: "Expense not found!"
       });
     }
     res.status(200).send({
@@ -160,7 +181,6 @@ const deleteExpense = async (req, res) => {
     });
   }
 };
-
 module.exports = {
   addExpense,
   getExpense,
