@@ -45,7 +45,7 @@ const addGoal = async (req, res) => {
 };
 const editGoal = async (req, res) => {
   const UserId = createObjectIdFromString(req.params.UserId);
-  const { name, price, percentage, monthly_saving ,haveNotified} = req.body;
+  const { name, price, percentage, monthly_saving ,haveNotified,timeto_take} = req.body;
   try {
     if (name === "" || price === "" || percentage === "" || monthly_saving === "") {
       throw new ApiError(400, "fields are required");
@@ -53,7 +53,8 @@ const editGoal = async (req, res) => {
     // Find the expense document by UserId and update it
     const goal = await Goal.findOneAndUpdate(
       { UserId: UserId }, // Filter condition
-      { name, price, percentage, monthly_saving,haveNotified }, // Update fields
+      { name, price, percentage, monthly_saving,haveNotified ,timeto_take
+      }, // Update fields
       { new: true } // Return the updated document
     );
     if (!goal) {
